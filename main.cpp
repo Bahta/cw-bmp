@@ -156,7 +156,6 @@
 		}		
 	}
 
-	//incrorrect using of k. it's not comparable with 0..255 size of palitra
 	void frame(tagBITMAPFILEHEADER &BITMAPFILEHEADER, tagBITMAPINFOHEADER &BITMAPINFOHEADER, matrix &image) {
 		double k,l;
 		int mI = BITMAPINFOHEADER.biHeight/2;
@@ -165,7 +164,6 @@
 			for (int j=0; j<BITMAPINFOHEADER.biWidth; ++j) {
 				k = 1-1.0*abs(mI - i)/mI;
 				l = 1-1.0*abs(mJ - j)/mJ;
-			//	k = (k+l)/2;
 				k = k*l;
 				
 				image[i][j].R *= k;
@@ -211,7 +209,7 @@
 		std::cout << "-n or --negative.: negative filter" << '\n';
 		std::cout << "--rgb100.........: filter, that eliminate pixels with brightness less than 100" << '\n';
 		std::cout << "-d or --diagonal.: (beta) now weed out and blured pixels by distance from right up side" << '\n';
-		std::cout << "-f or --frame....: negative filter" << '\n';
+		std::cout << "-f or --frame....: weed out and blured pixels by distance from center" << '\n';
 	};
 
 	void readParameters(const int argc, char **argv, parameters &inputParameters, char &source_file_name, bool &dontStopMeNow) {

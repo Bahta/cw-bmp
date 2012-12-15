@@ -178,31 +178,50 @@
 	}
 
 	void circle(tagBITMAPFILEHEADER &BITMAPFILEHEADER, tagBITMAPINFOHEADER &BITMAPINFOHEADER, matrix &image) {
+		//length of longest side
 		int l;
 		if (BITMAPINFOHEADER.biWidth > BITMAPINFOHEADER.biHeight) {l = BITMAPINFOHEADER.biHeight;} else {l = BITMAPINFOHEADER.biWidth;}
+		//intermediate value, undiveded share to simplify calculations
 		double x = 1.0*l / 12;
+		//radius of small circle
 		double r1 = x/2; 
+		//"lethal area" of small circle
 		double d1 = x/2;
+		//radius of medium circle
 		double r2 = 2*x;
+		//"lethal area" of medium circle
 		double d2 = x;
+		//radius of large circle
 		double r3 = 4.5*x;
+		//"lethal area" of large circle
 		double d3 = 1.5*x;
+		//distance of pixel from the center
 		double dc;
 
 		for (int i=0; i<BITMAPINFOHEADER.biHeight; ++i) {
 			for (int j=0; j<BITMAPINFOHEADER.biWidth; ++j) {
+				//distance between 2 points on the plane
 				dc = sqrt ( pow(1.0*BITMAPINFOHEADER.biWidth/2 - j,2) + pow(1.0*BITMAPINFOHEADER.biHeight/2 - i,2) );
+				//inside of large ring?
 				if (dc < r3+d3) {
+					//inside of medium ring?
 					if (dc < r2+d2) {
+						//inside of small ring?
 						if (dc < r1+d1) {
+							//ratio of the (distance between point and circle) and ("lethal area", length of its location) 
 							dc = abs(r1-dc)/d1; 
+							//updating red channel(of first ring) 
 							image[i][j].R *= dc;
+						//you are into mediun ring but out of small	
 						}else {
 							dc = abs(r2-dc)/d2; 
+							//updating green channel
 							image[i][j].G *= dc;
-						}	
+						}
+					//you are into large ring but out of medium		
 					}else {
 						dc = abs(r3-dc)/d3; 
+						//updating blue channel
 						image[i][j].B *= dc;
 					}
 				} 

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
-//#include <math.h>
+#include <math.h>
 #include <cstring>
 
 	typedef unsigned short WORD; //2b
@@ -134,14 +134,18 @@
 	}
 
 	void main_diagonal(tagBITMAPFILEHEADER &BITMAPFILEHEADER, tagBITMAPINFOHEADER &BITMAPINFOHEADER, matrix &image) {
-		double max =BITMAPINFOHEADER.biWidth*BITMAPINFOHEADER.biHeight;
-		double k;
+		double mn = 1.0 * BITMAPINFOHEADER.biHeight / BITMAPINFOHEADER.biWidth;
+		double z = sqrt(pow(mn,2) + 1);
+		double dmax = abs(BITMAPINFOHEADER.biHeight) / z;
+		double d;
+		
 		for (int i=0; i<BITMAPINFOHEADER.biHeight; ++i) {
 			for (int j=0; j<BITMAPINFOHEADER.biWidth; ++j) {
-				k=i*j/max;
-				image[i][j].R = image[i][j].R * (k);
-				image[i][j].G = image[i][j].G * (k);
-				image[i][j].B = image[i][j].B * (k);
+				d = abs(mn*j -  i) / z;
+				d =1 - (d/dmax); 
+				image[i][j].R = image[i][j].R * (d);
+				image[i][j].G = image[i][j].G * (d);
+				image[i][j].B = image[i][j].B * (d);
 			}
 		}		
 	}
@@ -171,6 +175,39 @@
 				image[i][j].B *= k;				
 			}
 		}		
+	}
+
+	void circle(tagBITMAPFILEHEADER &BITMAPFILEHEADER, tagBITMAPINFOHEADER &BITMAPINFOHEADER, matrix &image) {
+		int l;
+		if (BITMAPINFOHEADER.biWidth > BITMAPINFOHEADER.biHeight) {l = BITMAPINFOHEADER.biHeight;} else {l = BITMAPINFOHEADER.biWidth;}
+		double x = 1.0*l / 12;
+		double r1 = x/2; 
+		double d1 = x/2;
+		double r2 = 2*x;
+		double d2 = x;
+		double r3 = 4.5*x;
+		double d3 = 1.5*x;
+		double dc;
+
+		for (int i=0; i<BITMAPINFOHEADER.biHeight; ++i) {
+			for (int j=0; j<BITMAPINFOHEADER.biWidth; ++j) {
+				dc = sqrt ( pow(1.0*BITMAPINFOHEADER.biWidth/2 - j,2) + pow(1.0*BITMAPINFOHEADER.biHeight/2 - i,2) );
+				if (dc < r3+d3) {
+					if (dc < r2+d2) {
+						if (dc < r1+d1) {
+							dc = abs(r1-dc)/d1; 
+							image[i][j].R *= dc;
+						}else {
+							dc = abs(r2-dc)/d2; 
+							image[i][j].G *= dc;
+						}	
+					}else {
+						dc = abs(r3-dc)/d3; 
+						image[i][j].B *= dc;
+					}
+				} 
+			}
+		}			  
 	}
 /////////////////////////////////////////FILTERS/////////////////////////////////////////
 
@@ -202,14 +239,21 @@
 		one.isTrue = false;
 		one.queue = 0;
 		inputParameters.push_back(one);	
+		//number 5
+		one.name = "circle";
+		one.isTrue = false;
+		one.queue = 0;
+		inputParameters.push_back(one);	
 	}
 
 	void help() {
 	//	std::cout << "help is so helpful" << '\n';
+		std::cout << "How to start: <parameter1> [<parameter2>] <source file>" << '\n';
 		std::cout << "-n or --negative.: negative filter" << '\n';
 		std::cout << "--rgb100.........: filter, that eliminate pixels with brightness less than 100" << '\n';
-		std::cout << "-d or --diagonal.: (beta) now weed out and blured pixels by distance from right up side" << '\n';
-		std::cout << "-f or --frame....: weed out and blured pixels by distance from center" << '\n';
+		std::cout << "-d or --diagonal.: now weed out and blured pixels by distance from the main diagonal" << '\n';
+		std::cout << "-f or --frame....: weed out and blured pixels by distance from" << '\n';
+		std::cout << "-c or --circle...: three inner circles with r-g-b bluring " <<'\n';
 	};
 
 	void readParameters(const int argc, char **argv, parameters &inputParameters, char &source_file_name, bool &dontStopMeNow) {
@@ -230,9 +274,12 @@
 				}if ((strncmp(argv[i], "--diagonal",8) == 0 ) || (strncmp(argv[i], "-d", 2) == 0)) {
 					inputParameters[3].isTrue = true;
 					inputParameters[3].queue = i;
-				}if ((strncmp(argv[i], "--frame",5) == 0 ) || (strncmp(argv[i], "-f", 2) == 0)) {
+				}if ((strncmp(argv[i], "--frame",7) == 0 ) || (strncmp(argv[i], "-f", 2) == 0)) {
 					inputParameters[4].isTrue = true;
 					inputParameters[4].queue = i;
+				}if ((strncmp(argv[i], "--circle",8) == 0 ) || (strncmp(argv[i], "-c", 2) == 0)) {
+					inputParameters[5].isTrue = true;
+					inputParameters[5].queue = i;
 				}
 			}strcpy(&source_file_name, argv[argc-1]);
 		}	
@@ -245,6 +292,7 @@
 		if (inputParameters[2].isTrue == true) { rgb100(BITMAPFILEHEADER, BITMAPINFOHEADER, image); }
 		if (inputParameters[3].isTrue == true) { main_diagonal(BITMAPFILEHEADER, BITMAPINFOHEADER, image); }
 		if (inputParameters[4].isTrue == true) { frame(BITMAPFILEHEADER, BITMAPINFOHEADER, image); }	
+		if (inputParameters[5].isTrue == true) { circle(BITMAPFILEHEADER, BITMAPINFOHEADER, image); }	
 	}
 
 
